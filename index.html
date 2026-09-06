@@ -1,0 +1,2578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<title>Ocean Surfer v1.3</title>
+
+<style>
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+  -webkit-tap-highlight-color:transparent;
+  user-select:none;
+}
+
+body{
+  overflow:hidden;
+  font-family:Arial,sans-serif;
+  background:#20b8ed;
+}
+
+#game{
+  position:relative;
+  width:100vw;
+  height:100vh;
+  overflow:hidden;
+  background:#20b8ed;
+}
+
+/* SKY */
+#sky{
+  position:absolute;
+  inset:0 0 52% 0;
+  background:linear-gradient(#65d9ff,#d5f8ff);
+  transition:background 1s;
+}
+
+#sun{
+  position:absolute;
+  width:100px;
+  height:100px;
+  border-radius:50%;
+  top:8%;
+  right:10%;
+  background:#fff4a3;
+  box-shadow:0 0 45px #fff2a0;
+}
+
+#moon{
+  position:absolute;
+  width:75px;
+  height:75px;
+  border-radius:50%;
+  top:10%;
+  right:12%;
+  background:#fff;
+  box-shadow:0 0 35px white;
+  display:none;
+}
+
+.star{
+  position:absolute;
+  width:4px;
+  height:4px;
+  border-radius:50%;
+  background:white;
+  display:none;
+  animation:twinkle 1.3s infinite alternate;
+}
+
+@keyframes twinkle{
+  from{opacity:.2}
+  to{opacity:1}
+}
+
+/* CLOUDS */
+.cloud{
+  position:absolute;
+  width:140px;
+  height:45px;
+  border-radius:50px;
+  background:white;
+  opacity:.8;
+  animation:cloudMove 25s linear infinite;
+}
+
+.cloud:before,
+.cloud:after{
+  content:"";
+  position:absolute;
+  border-radius:50%;
+  background:white;
+}
+
+.cloud:before{
+  width:65px;
+  height:65px;
+  left:20px;
+  bottom:10px;
+}
+
+.cloud:after{
+  width:55px;
+  height:55px;
+  right:20px;
+  bottom:5px;
+}
+
+.c1{
+  top:12%;
+  left:-180px;
+}
+
+.c2{
+  top:25%;
+  left:-450px;
+  animation-delay:7s;
+  transform:scale(.7);
+}
+
+.c3{
+  top:17%;
+  left:-700px;
+  animation-delay:14s;
+  transform:scale(1.15);
+}
+
+@keyframes cloudMove{
+  to{
+    transform:translateX(150vw);
+  }
+}
+
+/* WORLD */
+#worldText{
+  position:absolute;
+  top:12px;
+  left:50%;
+  transform:translateX(-50%);
+  z-index:30;
+  padding:7px 16px;
+  border-radius:20px;
+  background:rgba(0,0,0,.35);
+  color:white;
+  font-weight:bold;
+  white-space:nowrap;
+}
+
+/* OCEAN */
+#ocean{
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:0;
+  height:53%;
+  overflow:hidden;
+  background:
+    repeating-linear-gradient(
+      0deg,
+      rgba(255,255,255,.15) 0 3px,
+      transparent 3px 28px
+    ),
+    linear-gradient(#0aa9e5,#006ba8);
+  transition:background 1s;
+}
+
+.wave{
+  position:absolute;
+  width:180%;
+  height:70px;
+  left:-40%;
+  border-top:5px solid rgba(255,255,255,.35);
+  border-radius:50%;
+  animation:waveMove 4s linear infinite;
+}
+
+.w1{top:12%}
+.w2{top:38%;animation-delay:1s}
+.w3{top:65%;animation-delay:2s}
+
+@keyframes waveMove{
+  from{transform:translateX(-10%)}
+  to{transform:translateX(10%)}
+}
+
+/* ISLAND */
+.island{
+  position:absolute;
+  width:180px;
+  height:75px;
+  bottom:44%;
+  z-index:4;
+  background:#c99b51;
+  border-radius:50% 50% 20% 20%;
+}
+
+.island:before{
+  content:"🌴";
+  position:absolute;
+  left:48px;
+  bottom:30px;
+  font-size:75px;
+}
+
+.i1{
+  left:-220px;
+  animation:islandMove 18s linear infinite;
+}
+
+.i2{
+  left:100%;
+  animation:islandMove 20s linear infinite;
+  animation-delay:8s;
+}
+
+@keyframes islandMove{
+  from{transform:translateX(0)}
+  to{transform:translateX(-140vw)}
+}
+
+/* HUD */
+#hud{
+  position:absolute;
+  top:52px;
+  left:10px;
+  right:10px;
+  z-index:50;
+  display:flex;
+  gap:7px;
+  flex-wrap:wrap;
+}
+
+.hudBox{
+  padding:8px 11px;
+  border-radius:12px;
+  color:white;
+  background:rgba(0,0,0,.55);
+  font-weight:bold;
+}
+
+.hudBtn{
+  padding:8px 12px;
+  border:0;
+  border-radius:12px;
+  color:white;
+  background:rgba(0,0,0,.6);
+  font-weight:bold;
+  cursor:pointer;
+}
+
+/* PLAYER */
+#player{
+  position:absolute;
+  width:105px;
+  height:125px;
+  left:50%;
+  bottom:17%;
+  transform:translateX(-50%);
+  z-index:20;
+  transition:left .15s ease;
+}
+
+#board{
+  position:absolute;
+  width:108px;
+  height:25px;
+  left:-2px;
+  bottom:7px;
+  border-radius:50%;
+  box-shadow:
+    inset 0 -5px 8px rgba(0,0,0,.35),
+    0 7px 12px rgba(0,0,0,.25);
+  transform:rotate(-4deg);
+}
+
+.board.classic{
+  background:linear-gradient(90deg,#ff5555,#fff,#ff5555);
+}
+
+.board.speed{
+  background:linear-gradient(90deg,#00eaff,#0066ff,#00eaff);
+}
+
+.board.rainbow{
+  background:linear-gradient(
+    90deg,
+    red,orange,yellow,lime,cyan,blue,violet
+  );
+}
+
+#board:after{
+  content:"";
+  position:absolute;
+  left:20px;
+  right:20px;
+  top:6px;
+  height:4px;
+  border-radius:10px;
+  background:rgba(255,255,255,.85);
+}
+
+#playerBody{
+  position:absolute;
+  left:22px;
+  bottom:25px;
+  font-size:65px;
+  filter:drop-shadow(0 7px 4px rgba(0,0,0,.3));
+  animation:surferBob .55s ease-in-out infinite alternate;
+}
+
+@keyframes surferBob{
+  from{
+    transform:translateY(0) rotate(-3deg);
+  }
+  to{
+    transform:translateY(-8px) rotate(4deg);
+  }
+}
+
+.playerMove{
+  animation:playerLean .25s ease;
+}
+
+@keyframes playerLean{
+  0%{
+    transform:translateX(-50%) rotate(0);
+  }
+  50%{
+    transform:translateX(-50%) rotate(-12deg) translateY(-5px);
+  }
+  100%{
+    transform:translateX(-50%) rotate(0);
+  }
+}
+
+.splash{
+  position:absolute;
+  left:15px;
+  bottom:0;
+  width:75px;
+  height:18px;
+  border:3px solid rgba(255,255,255,.75);
+  border-radius:50%;
+  animation:splashAnim .8s infinite;
+}
+
+@keyframes splashAnim{
+  50%{
+    transform:scale(1.3);
+    opacity:.35;
+  }
+}
+
+/* OBJECTS */
+.object{
+  position:absolute;
+  z-index:15;
+}
+
+.coin{
+  width:52px;
+  height:52px;
+  border-radius:50%;
+  border:4px solid #fff06a;
+  background:
+    radial-gradient(
+      circle at 30% 25%,
+      #fff 0 7%,
+      transparent 8%
+    ),
+    radial-gradient(
+      circle,
+      #fff36b 0 20%,
+      #ffd000 45%,
+      #d58900 78%,
+      #8b4d00
+    );
+  box-shadow:
+    0 0 15px #ffd900,
+    inset 4px 4px 7px rgba(255,255,255,.5);
+  animation:coinSpin .7s linear infinite;
+}
+
+.coin:after{
+  content:"$";
+  position:absolute;
+  inset:0;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  color:#9b6500;
+  font-size:25px;
+  font-weight:bold;
+}
+
+@keyframes coinSpin{
+  0%{
+    transform:rotateY(0) translateY(0);
+  }
+  50%{
+    transform:rotateY(180deg) translateY(-8px);
+  }
+  100%{
+    transform:rotateY(360deg) translateY(0);
+  }
+}
+
+.rock{
+  width:64px;
+  height:54px;
+  border-radius:55% 45% 48% 42%;
+  background:
+    radial-gradient(circle at 25% 25%,#bbb 0 7%,transparent 8%),
+    radial-gradient(circle at 70% 35%,#777 0 9%,transparent 10%),
+    radial-gradient(circle at 45% 70%,#444 0 8%,transparent 9%),
+    linear-gradient(145deg,#aaa,#555,#222);
+  box-shadow:0 8px 10px rgba(0,0,0,.35);
+  animation:rockAnim .8s ease-in-out infinite alternate;
+}
+
+@keyframes rockAnim{
+  from{transform:rotate(-4deg)}
+  to{transform:rotate(4deg) translateY(-5px)}
+}
+
+.barrel{
+  width:55px;
+  height:65px;
+  border:3px solid #321707;
+  border-radius:12px 12px 16px 16px;
+  background:repeating-linear-gradient(
+    90deg,
+    #4b260c 0 7px,
+    #8a4b18 7px 14px,
+    #5c2d0d 14px 21px
+  );
+  box-shadow:0 7px 8px rgba(0,0,0,.35);
+  animation:barrelAnim .6s ease-in-out infinite alternate;
+}
+
+.barrel:before,
+.barrel:after{
+  content:"";
+  position:absolute;
+  left:-3px;
+  width:55px;
+  height:7px;
+  border-radius:5px;
+  background:#aaa;
+}
+
+.barrel:before{top:12px}
+.barrel:after{bottom:12px}
+
+@keyframes barrelAnim{
+  from{transform:rotate(-6deg)}
+  to{transform:rotate(6deg)}
+}
+
+/* POWER UPS */
+.power{
+  width:56px;
+  height:56px;
+  border-radius:50%;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  font-size:30px;
+  box-shadow:0 0 20px white;
+  animation:powerFloat .6s infinite alternate;
+}
+
+.shield{
+  background:#24c8ff;
+}
+
+.magnet{
+  background:#ff4c7b;
+}
+
+.boost{
+  background:#ffd21f;
+}
+
+@keyframes powerFloat{
+  to{
+    transform:translateY(-10px) scale(1.08);
+  }
+}
+
+/* CONTROLS */
+#controls{
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:20px;
+  z-index:45;
+  display:flex;
+  justify-content:space-between;
+  padding:0 25px;
+  pointer-events:none;
+}
+
+.control{
+  width:80px;
+  height:60px;
+  border:0;
+  border-radius:18px;
+  color:white;
+  background:rgba(0,0,0,.5);
+  font-size:30px;
+  font-weight:bold;
+  pointer-events:auto;
+  touch-action:none;
+}
+
+/* SCREENS */
+.screen{
+  position:absolute;
+  inset:0;
+  z-index:100;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  padding:20px;
+  text-align:center;
+  color:white;
+  background:linear-gradient(
+    rgba(0,100,170,.65),
+    rgba(0,20,70,.82)
+  );
+}
+
+.screen h1{
+  font-size:48px;
+  margin-bottom:12px;
+  text-shadow:0 5px 15px rgba(0,0,0,.5);
+}
+
+.screen h2{
+  margin-bottom:15px;
+}
+
+.menuBtn{
+  width:230px;
+  margin:7px;
+  padding:14px;
+  border:0;
+  border-radius:14px;
+  color:#00669b;
+  background:white;
+  font-size:18px;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+.menuBtn:active{
+  transform:scale(.95);
+}
+
+.hidden{
+  display:none !important;
+}
+
+/* SHOP */
+.shopPanel{
+  width:min(700px,95vw);
+  max-height:70vh;
+  overflow:auto;
+  padding:15px;
+  border-radius:18px;
+  background:rgba(0,0,0,.4);
+}
+
+.shopSection{
+  margin-bottom:20px;
+}
+
+.items{
+  display:flex;
+  justify-content:center;
+  flex-wrap:wrap;
+  gap:10px;
+}
+
+.item{
+  width:180px;
+  padding:15px;
+  border-radius:15px;
+  background:rgba(255,255,255,.15);
+}
+
+.itemIcon{
+  font-size:55px;
+  margin:5px;
+}
+
+.item button{
+  margin-top:8px;
+  padding:8px 15px;
+  border:0;
+  border-radius:9px;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+/* PAUSE */
+#pauseOverlay{
+  position:absolute;
+  inset:0;
+  z-index:90;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  color:white;
+  background:rgba(0,0,0,.55);
+  font-size:42px;
+  font-weight:bold;
+}
+
+/* TOAST */
+#toast{
+  position:absolute;
+  top:22%;
+  left:50%;
+  transform:translateX(-50%);
+  z-index:200;
+  padding:10px 18px;
+  border-radius:20px;
+  color:white;
+  background:rgba(0,0,0,.65);
+  font-weight:bold;
+  opacity:0;
+  pointer-events:none;
+}
+
+.toastShow{
+  animation:toastAnim 1.2s forwards;
+}
+
+@keyframes toastAnim{
+  0%{
+    opacity:0;
+    transform:translate(-50%,20px);
+  }
+  20%,80%{
+    opacity:1;
+    transform:translate(-50%,0);
+  }
+  100%{
+    opacity:0;
+  }
+}
+
+@media(max-width:600px){
+  .screen h1{
+    font-size:36px;
+  }
+
+  .hudBox{
+    font-size:13px;
+    padding:6px 9px;
+  }
+
+  #player{
+    bottom:22%;
+  }
+
+  #ocean{
+    height:55%;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div id="game">
+
+  <div id="sky"></div>
+
+  <div id="sun"></div>
+  <div id="moon"></div>
+
+  <div class="star" style="left:10%;top:10%"></div>
+  <div class="star" style="left:25%;top:20%"></div>
+  <div class="star" style="left:40%;top:8%"></div>
+  <div class="star" style="left:58%;top:17%"></div>
+  <div class="star" style="left:75%;top:9%"></div>
+  <div class="star" style="left:88%;top:25%"></div>
+
+  <div class="cloud c1"></div>
+  <div class="cloud c2"></div>
+  <div class="cloud c3"></div>
+
+  <div id="worldText">🌴 BEACH</div>
+
+  <div id="ocean">
+    <div class="wave w1"></div>
+    <div class="wave w2"></div>
+    <div class="wave w3"></div>
+  </div>
+
+  <div class="island i1"></div>
+  <div class="island i2"></div>
+
+  <!-- HUD -->
+  <div id="hud">
+
+    <div class="hudBox">
+      Score: <span id="score">0</span>
+    </div>
+
+    <div class="hudBox">
+      🪙 <span id="coins">0</span>
+    </div>
+
+    <div class="hudBox">
+      ❤️ <span id="lives">3</span>
+    </div>
+
+    <div class="hudBox">
+      🏆 <span id="highScore">0</span>
+    </div>
+
+    <button class="hudBtn" id="pauseBtn">
+      ⏸️
+    </button>
+
+    <button class="hudBtn" id="soundBtn">
+      🔊
+    </button>
+
+  </div>
+
+  <!-- PLAYER -->
+  <div id="player">
+
+    <div id="board" class="board classic"></div>
+
+    <div id="playerBody">🏄</div>
+
+    <div class="splash"></div>
+
+  </div>
+
+  <!-- MOBILE CONTROLS -->
+  <div id="controls">
+
+    <button class="control" id="leftBtn">
+      ◀
+    </button>
+
+    <button class="control" id="rightBtn">
+      ▶
+    </button>
+
+  </div>
+
+  <div id="toast"></div>
+
+  <!-- PAUSE -->
+  <div id="pauseOverlay" class="hidden">
+    ⏸️ PAUSED
+  </div>
+
+  <!-- MAIN MENU -->
+  <div id="mainMenu" class="screen">
+
+    <h1>🌊 Ocean Surfer</h1>
+
+    <p style="margin-bottom:15px">
+      Version 1.3 • 6 Worlds
+    </p>
+
+    <button class="menuBtn" id="playBtn">
+      ▶ PLAY
+    </button>
+
+    <button class="menuBtn" id="shopBtn">
+      🛒 SHOP
+    </button>
+
+    <button class="menuBtn" id="howBtn">
+      📖 HOW TO PLAY
+    </button>
+
+    <button class="menuBtn" id="creditsBtn">
+      ⭐ CREDITS
+    </button>
+
+  </div>
+
+  <!-- SHOP -->
+  <div id="shopScreen" class="screen hidden">
+
+    <h2>🛒 SHOP</h2>
+
+    <div class="shopPanel">
+
+      <div class="shopSection">
+
+        <h3>🏄 Characters</h3>
+
+        <div class="items" id="characterItems"></div>
+
+      </div>
+
+      <div class="shopSection">
+
+        <h3>🏄 Boards</h3>
+
+        <div class="items" id="boardItems"></div>
+
+      </div>
+
+    </div>
+
+    <button class="menuBtn" id="shopBackBtn">
+      ◀ BACK
+    </button>
+
+  </div>
+
+  <!-- HOW -->
+  <div id="howScreen" class="screen hidden">
+
+    <h2>📖 HOW TO PLAY</h2>
+
+    <div style="line-height:1.8">
+
+      <p>⬅️ ➡️ Move left/right</p>
+      <p>⌨️ A / D = Move</p>
+      <p>⌨️ Arrow Keys = Move</p>
+      <p>🪙 Collect coins</p>
+      <p>🪨 Avoid rocks</p>
+      <p>🛢️ Avoid barrels</p>
+      <p>🛡️ Shield = protection</p>
+      <p>🧲 Magnet = collect coins</p>
+      <p>⚡ Boost = extra speed</p>
+      <p>🌍 World changes every 20 seconds</p>
+
+    </div>
+
+    <button class="menuBtn" id="howBackBtn">
+      ◀ BACK
+    </button>
+
+  </div>
+
+  <!-- CREDITS -->
+  <div id="creditsScreen" class="screen hidden">
+
+    <h2>⭐ CREDITS</h2>
+
+    <p>Ocean Surfer</p>
+    <p>Version 1.3</p>
+
+    <p style="margin-top:15px">
+      Made with HTML + CSS + JavaScript ❤️
+    </p>
+
+    <button class="menuBtn" id="creditsBackBtn">
+      ◀ BACK
+    </button>
+
+  </div>
+
+  <!-- GAME OVER -->
+  <div id="gameOver" class="screen hidden">
+
+    <h1>💥 GAME OVER</h1>
+
+    <p>
+      Score:
+      <b id="finalScore">0</b>
+    </p>
+
+    <p>
+      Best:
+      <b id="finalHigh">0</b>
+    </p>
+
+    <button class="menuBtn" id="restartBtn">
+      🔄 RESTART
+    </button>
+
+    <button class="menuBtn" id="gameOverMenuBtn">
+      🏠 MAIN MENU
+    </button>
+
+  </div>
+
+</div>
+
+<script>
+
+/* =====================================================
+   OCEAN SURFER v1.3
+   ===================================================== */
+
+/* SAVE KEYS */
+
+const COINS_KEY =
+  "oceanSurferCoins_v13";
+
+const OWNED_BOARDS_KEY =
+  "oceanSurferOwnedBoards_v13";
+
+const EQUIPPED_BOARD_KEY =
+  "oceanSurferEquippedBoard_v13";
+
+const OWNED_CHARACTERS_KEY =
+  "oceanSurferOwnedCharacters_v13";
+
+const EQUIPPED_CHARACTER_KEY =
+  "oceanSurferEquippedCharacter_v13";
+
+const HIGH_SCORE_KEY =
+  "oceanSurferHighScore_v13";
+
+
+/* SAVE DATA */
+
+let coins =
+  Number(localStorage.getItem(COINS_KEY)) || 0;
+
+let ownedBoards =
+  JSON.parse(
+    localStorage.getItem(OWNED_BOARDS_KEY)
+  ) || ["classic"];
+
+let equippedBoard =
+  localStorage.getItem(
+    EQUIPPED_BOARD_KEY
+  ) || "classic";
+
+let ownedCharacters =
+  JSON.parse(
+    localStorage.getItem(OWNED_CHARACTERS_KEY)
+  ) || ["boy"];
+
+let equippedCharacter =
+  localStorage.getItem(
+    EQUIPPED_CHARACTER_KEY
+  ) || "boy";
+
+let highScore =
+  Number(localStorage.getItem(HIGH_SCORE_KEY)) || 0;
+
+
+/* DATA */
+
+const characters = {
+
+  boy:{
+    name:"Surfer Boy",
+    price:0,
+    emoji:"🏄"
+  },
+
+  girl:{
+    name:"Surfer Girl",
+    price:75,
+    emoji:"🏄‍♀️"
+  },
+
+  robot:{
+    name:"Robot Surfer",
+    price:200,
+    emoji:"🤖"
+  }
+
+};
+
+
+const boards = {
+
+  classic:{
+    name:"Classic Board",
+    price:0,
+    speed:1
+  },
+
+  speed:{
+    name:"Speed Board",
+    price:50,
+    speed:1.15
+  },
+
+  rainbow:{
+    name:"Rainbow Board",
+    price:150,
+    speed:1.30
+  }
+
+};
+
+
+/* DOM */
+
+const player =
+  document.getElementById("player");
+
+const playerBody =
+  document.getElementById("playerBody");
+
+const board =
+  document.getElementById("board");
+
+const scoreEl =
+  document.getElementById("score");
+
+const coinsEl =
+  document.getElementById("coins");
+
+const livesEl =
+  document.getElementById("lives");
+
+const highScoreEl =
+  document.getElementById("highScore");
+
+const mainMenu =
+  document.getElementById("mainMenu");
+
+const shopScreen =
+  document.getElementById("shopScreen");
+
+const howScreen =
+  document.getElementById("howScreen");
+
+const creditsScreen =
+  document.getElementById("creditsScreen");
+
+const gameOver =
+  document.getElementById("gameOver");
+
+const pauseOverlay =
+  document.getElementById("pauseOverlay");
+
+const toast =
+  document.getElementById("toast");
+
+const sky =
+  document.getElementById("sky");
+
+const ocean =
+  document.getElementById("ocean");
+
+const sun =
+  document.getElementById("sun");
+
+const moon =
+  document.getElementById("moon");
+
+const worldText =
+  document.getElementById("worldText");
+
+
+/* GAME VARIABLES */
+
+let running = false;
+let paused = false;
+
+let lane = 1;
+
+let score = 0;
+let lives = 3;
+
+let baseSpeed = 330;
+
+let lastTime = 0;
+
+let spawnTimer = 0;
+
+let objects = [];
+
+let worldIndex = 0;
+let worldTimer = 0;
+
+let shieldTime = 0;
+let magnetTime = 0;
+let boostTime = 0;
+
+let soundEnabled = true;
+
+let audioCtx = null;
+
+
+/* WORLDS */
+
+const worlds = [
+
+  {
+    name:"🌴 BEACH",
+    sky:"linear-gradient(#64ddff,#d4f8ff)",
+    ocean:"linear-gradient(#16b9ee,#0084bd)",
+    sun:true,
+    moon:false
+  },
+
+  {
+    name:"🌊 OPEN OCEAN",
+    sky:"linear-gradient(#39c9ff,#91e7ff)",
+    ocean:"linear-gradient(#007db8,#004f91)",
+    sun:true,
+    moon:false
+  },
+
+  {
+    name:"🏝️ ISLAND AREA",
+    sky:"linear-gradient(#5bd8ff,#d0f7ff)",
+    ocean:"linear-gradient(#11c7cf,#007eaa)",
+    sun:true,
+    moon:false
+  },
+
+  {
+    name:"🌅 SUNSET",
+    sky:"linear-gradient(#ff8855,#ffb16c,#704b91)",
+    ocean:"linear-gradient(#d96968,#6b3978)",
+    sun:true,
+    moon:false
+  },
+
+  {
+    name:"🌙 NIGHT",
+    sky:"linear-gradient(#111b45,#05091e)",
+    ocean:"linear-gradient(#062d5c,#03182e)",
+    sun:false,
+    moon:true
+  },
+
+  {
+    name:"🌩️ STORM",
+    sky:"linear-gradient(#303849,#111827)",
+    ocean:"linear-gradient(#183f58,#071c2c)",
+    sun:false,
+    moon:false
+  }
+
+];
+
+
+/* WORLD */
+
+function applyWorld(){
+
+  const w = worlds[worldIndex];
+
+  worldText.textContent = w.name;
+
+  sky.style.background = w.sky;
+
+  ocean.style.background =
+    "repeating-linear-gradient(" +
+    "0deg," +
+    "rgba(255,255,255,.13) 0 3px," +
+    "transparent 3px 28px)," +
+    w.ocean;
+
+  sun.style.display =
+    w.sun ? "block" : "none";
+
+  moon.style.display =
+    w.moon ? "block" : "none";
+
+  document
+    .querySelectorAll(".cloud")
+    .forEach(c=>{
+
+      c.style.opacity =
+        worldIndex >= 4 ? ".18" : ".8";
+
+    });
+
+  document
+    .querySelectorAll(".star")
+    .forEach(s=>{
+
+      s.style.display =
+        worldIndex >= 4
+        ? "block"
+        : "none";
+
+    });
+
+  if(worldIndex === 5){
+
+    if(Math.random() < .35){
+
+      lightning();
+
+    }
+
+  }
+
+}
+
+
+function lightning(){
+
+  sky.style.filter =
+    "brightness(2.2)";
+
+  ocean.style.filter =
+    "brightness(1.8)";
+
+  setTimeout(()=>{
+
+    sky.style.filter = "";
+    ocean.style.filter = "";
+
+  },100);
+
+}
+
+
+/* AUDIO */
+
+function initAudio(){
+
+  if(!audioCtx){
+
+    audioCtx =
+      new (
+        window.AudioContext ||
+        window.webkitAudioContext
+      )();
+
+  }
+
+  if(audioCtx.state === "suspended"){
+
+    audioCtx.resume();
+
+  }
+
+}
+
+
+function beep(
+  frequency,
+  duration,
+  type="sine"
+){
+
+  if(!soundEnabled)return;
+
+  initAudio();
+
+  const osc =
+    audioCtx.createOscillator();
+
+  const gain =
+    audioCtx.createGain();
+
+  osc.type = type;
+
+  osc.frequency.value =
+    frequency;
+
+  gain.gain.setValueAtTime(
+    .08,
+    audioCtx.currentTime
+  );
+
+  gain.gain.exponentialRampToValueAtTime(
+    .001,
+    audioCtx.currentTime + duration
+  );
+
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+
+  osc.start();
+
+  osc.stop(
+    audioCtx.currentTime + duration
+  );
+
+}
+
+
+function toggleSound(){
+
+  soundEnabled =
+    !soundEnabled;
+
+  document.getElementById(
+    "soundBtn"
+  ).textContent =
+    soundEnabled ? "🔊" : "🔇";
+
+  if(soundEnabled){
+
+    beep(600,.1);
+
+  }
+
+}
+
+
+/* SCREENS */
+
+function hideScreens(){
+
+  mainMenu.classList.add("hidden");
+  shopScreen.classList.add("hidden");
+  howScreen.classList.add("hidden");
+  creditsScreen.classList.add("hidden");
+  gameOver.classList.add("hidden");
+
+}
+
+
+function backMenu(){
+
+  running = false;
+  paused = false;
+
+  hideScreens();
+
+  mainMenu.classList.remove("hidden");
+
+  pauseOverlay.classList.add("hidden");
+
+  clearObjects();
+
+}
+
+
+function openShop(){
+
+  running = false;
+
+  hideScreens();
+
+  shopScreen.classList.remove("hidden");
+
+  renderShop();
+
+}
+
+
+function openHow(){
+
+  running = false;
+
+  hideScreens();
+
+  howScreen.classList.remove("hidden");
+
+}
+
+
+function openCredits(){
+
+  running = false;
+
+  hideScreens();
+
+  creditsScreen.classList.remove("hidden");
+
+}
+
+
+/* SHOP */
+
+function renderShop(){
+
+  const charBox =
+    document.getElementById(
+      "characterItems"
+    );
+
+  const boardBox =
+    document.getElementById(
+      "boardItems"
+    );
+
+  charBox.innerHTML = "";
+  boardBox.innerHTML = "";
+
+
+  for(const id in characters){
+
+    const c = characters[id];
+
+    const owned =
+      ownedCharacters.includes(id);
+
+    const equipped =
+      equippedCharacter === id;
+
+    const div =
+      document.createElement("div");
+
+    div.className = "item";
+
+    div.innerHTML = `
+
+      <div class="itemIcon">
+        ${c.emoji}
+      </div>
+
+      <b>${c.name}</b>
+
+      <p>
+        ${
+          c.price === 0
+          ? "FREE"
+          : "🪙 " + c.price
+        }
+      </p>
+
+      <button data-character="${id}">
+        ${
+          equipped
+          ? "EQUIPPED"
+          : owned
+          ? "EQUIP"
+          : "BUY"
+        }
+      </button>
+
+    `;
+
+    div
+      .querySelector("button")
+      .addEventListener(
+        "click",
+        ()=>{
+          characterAction(id);
+        }
+      );
+
+    charBox.appendChild(div);
+
+  }
+
+
+  for(const id in boards){
+
+    const b = boards[id];
+
+    const owned =
+      ownedBoards.includes(id);
+
+    const equipped =
+      equippedBoard === id;
+
+    const div =
+      document.createElement("div");
+
+    div.className = "item";
+
+    let icon = "🏄";
+
+    if(id === "speed")
+      icon = "⚡🏄";
+
+    if(id === "rainbow")
+      icon = "🌈🏄";
+
+    div.innerHTML = `
+
+      <div class="itemIcon">
+        ${icon}
+      </div>
+
+      <b>${b.name}</b>
+
+      <p>
+        ${
+          b.price === 0
+          ? "FREE"
+          : "🪙 " + b.price
+        }
+      </p>
+
+      <small>
+        Speed ×${b.speed}
+      </small>
+
+      <br>
+
+      <button data-board="${id}">
+        ${
+          equipped
+          ? "EQUIPPED"
+          : owned
+          ? "EQUIP"
+          : "BUY"
+        }
+      </button>
+
+    `;
+
+    div
+      .querySelector("button")
+      .addEventListener(
+        "click",
+        ()=>{
+          boardAction(id);
+        }
+      );
+
+    boardBox.appendChild(div);
+
+  }
+
+  coinsEl.textContent = coins;
+
+}
+
+
+function characterAction(id){
+
+  const c = characters[id];
+
+  if(ownedCharacters.includes(id)){
+
+    equippedCharacter = id;
+
+    localStorage.setItem(
+      EQUIPPED_CHARACTER_KEY,
+      id
+    );
+
+    updatePlayer();
+
+    renderShop();
+
+    beep(500,.08);
+
+    return;
+
+  }
+
+  if(coins >= c.price){
+
+    coins -= c.price;
+
+    ownedCharacters.push(id);
+
+    equippedCharacter = id;
+
+    saveAll();
+
+    updatePlayer();
+
+    renderShop();
+
+    showToast(
+      "🏄 Character unlocked!"
+    );
+
+    beep(700,.15);
+
+  }else{
+
+    showToast(
+      "❌ Not enough coins!"
+    );
+
+  }
+
+}
+
+
+function boardAction(id){
+
+  const b = boards[id];
+
+  if(ownedBoards.includes(id)){
+
+    equippedBoard = id;
+
+    localStorage.setItem(
+      EQUIPPED_BOARD_KEY,
+      id
+    );
+
+    updatePlayer();
+
+    renderShop();
+
+    beep(550,.08);
+
+    return;
+
+  }
+
+  if(coins >= b.price){
+
+    coins -= b.price;
+
+    ownedBoards.push(id);
+
+    equippedBoard = id;
+
+    saveAll();
+
+    updatePlayer();
+
+    renderShop();
+
+    showToast(
+      "🏄 Board unlocked!"
+    );
+
+    beep(800,.15);
+
+  }else{
+
+    showToast(
+      "❌ Not enough coins!"
+    );
+
+  }
+
+}
+
+
+/* SAVE */
+
+function saveAll(){
+
+  localStorage.setItem(
+    COINS_KEY,
+    coins
+  );
+
+  localStorage.setItem(
+    OWNED_BOARDS_KEY,
+    JSON.stringify(ownedBoards)
+  );
+
+  localStorage.setItem(
+    EQUIPPED_BOARD_KEY,
+    equippedBoard
+  );
+
+  localStorage.setItem(
+    OWNED_CHARACTERS_KEY,
+    JSON.stringify(ownedCharacters)
+  );
+
+  localStorage.setItem(
+    EQUIPPED_CHARACTER_KEY,
+    equippedCharacter
+  );
+
+  localStorage.setItem(
+    HIGH_SCORE_KEY,
+    highScore
+  );
+
+}
+
+
+/* PLAYER */
+
+function updatePlayer(){
+
+  playerBody.textContent =
+    characters[equippedCharacter].emoji;
+
+  board.className =
+    "board " + equippedBoard;
+
+}
+
+
+function updatePlayerPosition(){
+
+  const positions = [
+    "22%",
+    "50%",
+    "78%"
+  ];
+
+  player.style.left =
+    positions[lane];
+
+}
+
+
+/* FIXED MOVE FUNCTION */
+
+function move(dir){
+
+  if(!running || paused)
+    return;
+
+  const oldLane =
+    lane;
+
+  lane += dir;
+
+  if(lane < 0)
+    lane = 0;
+
+  if(lane > 2)
+    lane = 2;
+
+  if(lane !== oldLane){
+
+    updatePlayerPosition();
+
+    player.classList.remove(
+      "playerMove"
+    );
+
+    void player.offsetWidth;
+
+    player.classList.add(
+      "playerMove"
+    );
+
+    beep(
+      300 + lane * 100,
+      .07
+    );
+
+  }
+
+}
+
+
+/* START */
+
+function startGame(){
+
+  hideScreens();
+
+  running = true;
+  paused = false;
+
+  score = 0;
+  lives = 3;
+
+  lane = 1;
+
+  baseSpeed =
+    330 *
+    boards[equippedBoard].speed;
+
+  lastTime =
+    performance.now();
+
+  spawnTimer = 0;
+
+  worldIndex = 0;
+  worldTimer = 0;
+
+  shieldTime = 0;
+  magnetTime = 0;
+  boostTime = 0;
+
+  clearObjects();
+
+  updatePlayer();
+  updatePlayerPosition();
+
+  scoreEl.textContent = "0";
+  livesEl.textContent = "3";
+  coinsEl.textContent = coins;
+  highScoreEl.textContent = highScore;
+
+  pauseOverlay.classList.add(
+    "hidden"
+  );
+
+  document.getElementById(
+    "pauseBtn"
+  ).textContent = "⏸️";
+
+  applyWorld();
+
+  initAudio();
+
+  beep(500,.12);
+
+  setTimeout(()=>{
+    beep(750,.12);
+  },120);
+
+  requestAnimationFrame(
+    gameLoop
+  );
+
+}
+
+
+/* SPAWN */
+
+function spawnObject(){
+
+  const obj =
+    document.createElement("div");
+
+  const laneIndex =
+    Math.floor(
+      Math.random() * 3
+    );
+
+  const random =
+    Math.random();
+
+  let type;
+
+  if(random < .48){
+
+    type = "coin";
+
+  }else if(random < .73){
+
+    type = "rock";
+
+  }else if(random < .90){
+
+    type = "barrel";
+
+  }else{
+
+    type = "power";
+
+  }
+
+
+  if(type === "coin"){
+
+    obj.className =
+      "object coin";
+
+  }
+
+
+  if(type === "rock"){
+
+    obj.className =
+      "object rock";
+
+  }
+
+
+  if(type === "barrel"){
+
+    obj.className =
+      "object barrel";
+
+  }
+
+
+  if(type === "power"){
+
+    const types = [
+      "shield",
+      "magnet",
+      "boost"
+    ];
+
+    const p =
+      types[
+        Math.floor(
+          Math.random() *
+          types.length
+        )
+      ];
+
+    obj.className =
+      "object power " + p;
+
+    obj.dataset.power = p;
+
+    if(p === "shield")
+      obj.textContent = "🛡️";
+
+    if(p === "magnet")
+      obj.textContent = "🧲";
+
+    if(p === "boost")
+      obj.textContent = "⚡";
+
+  }
+
+
+  const positions = [
+    "22%",
+    "50%",
+    "78%"
+  ];
+
+  obj.style.left =
+    positions[laneIndex];
+
+  obj.style.top =
+    "-100px";
+
+  game.appendChild(obj);
+
+  objects.push({
+
+    el:obj,
+
+    y:-100,
+
+    lane:laneIndex,
+
+    type:type,
+
+    collected:false
+
+  });
+
+}
+
+
+/* COLLISION */
+
+function collision(a,b){
+
+  const r1 =
+    a.getBoundingClientRect();
+
+  const r2 =
+    b.getBoundingClientRect();
+
+  return !(
+    r1.right < r2.left ||
+    r1.left > r2.right ||
+    r1.bottom < r2.top ||
+    r1.top > r2.bottom
+  );
+
+}
+
+
+/* COIN */
+
+function collectCoin(o){
+
+  coins++;
+
+  score += 10;
+
+  coinsEl.textContent =
+    coins;
+
+  saveAll();
+
+  showToast(
+    "+10 🪙"
+  );
+
+  beep(
+    850,
+    .08
+  );
+
+  o.collected = true;
+
+  o.el.remove();
+
+}
+
+
+/* POWER */
+
+function collectPower(o){
+
+  const p =
+    o.el.dataset.power;
+
+  if(p === "shield"){
+
+    shieldTime = 6;
+
+    showToast(
+      "🛡️ SHIELD!"
+    );
+
+  }
+
+  if(p === "magnet"){
+
+    magnetTime = 7;
+
+    showToast(
+      "🧲 MAGNET!"
+    );
+
+  }
+
+  if(p === "boost"){
+
+    boostTime = 5;
+
+    showToast(
+      "⚡ SPEED BOOST!"
+    );
+
+  }
+
+  beep(
+    950,
+    .15
+  );
+
+  o.collected = true;
+
+  o.el.remove();
+
+}
+
+
+/* OBSTACLE */
+
+function hitObstacle(o){
+
+  if(shieldTime > 0){
+
+    shieldTime = 0;
+
+    showToast(
+      "🛡️ SHIELD SAVED YOU!"
+    );
+
+    beep(
+      1100,
+      .12
+    );
+
+    o.collected = true;
+    o.el.remove();
+
+    return;
+
+  }
+
+  lives--;
+
+  livesEl.textContent =
+    lives;
+
+  beep(
+    120,
+    .25,
+    "sawtooth"
+  );
+
+  showToast(
+    "💥 HIT!"
+  );
+
+  o.collected = true;
+
+  o.el.remove();
+
+  if(lives <= 0){
+
+    endGame();
+
+  }
+
+}
+
+
+/* MAGNET */
+
+function updateMagnet(o){
+
+  if(magnetTime <= 0)
+    return;
+
+  if(o.type !== "coin")
+    return;
+
+  const pRect =
+    player.getBoundingClientRect();
+
+  const oRect =
+    o.el.getBoundingClientRect();
+
+  const dx =
+    pRect.left -
+    oRect.left;
+
+  const dy =
+    pRect.top -
+    oRect.top;
+
+  const distance =
+    Math.sqrt(
+      dx*dx + dy*dy
+    );
+
+  if(distance < 220){
+
+    o.el.style.transform =
+      `translateX(${dx * .4}px)`;
+
+  }
+
+}
+
+
+/* GAME LOOP */
+
+function gameLoop(time){
+
+  if(!running)
+    return;
+
+  requestAnimationFrame(
+    gameLoop
+  );
+
+  if(paused){
+
+    lastTime = time;
+
+    return;
+
+  }
+
+  const delta =
+    Math.min(
+      (time-lastTime)/1000,
+      .05
+    );
+
+  lastTime = time;
+
+
+  score +=
+    delta * 2;
+
+  scoreEl.textContent =
+    Math.floor(score);
+
+
+  if(score > highScore){
+
+    highScore =
+      Math.floor(score);
+
+    highScoreEl.textContent =
+      highScore;
+
+    localStorage.setItem(
+      HIGH_SCORE_KEY,
+      highScore
+    );
+
+  }
+
+
+  /* WORLD */
+
+  worldTimer += delta;
+
+  if(worldTimer >= 20){
+
+    worldTimer = 0;
+
+    worldIndex++;
+
+    if(worldIndex >= worlds.length)
+      worldIndex = 0;
+
+    applyWorld();
+
+    showToast(
+      "🌍 " +
+      worlds[worldIndex].name
+    );
+
+  }
+
+
+  /* POWER TIMERS */
+
+  if(shieldTime > 0)
+    shieldTime -= delta;
+
+  if(magnetTime > 0)
+    magnetTime -= delta;
+
+  if(boostTime > 0)
+    boostTime -= delta;
+
+
+  let currentSpeed =
+    baseSpeed;
+
+  if(boostTime > 0){
+
+    currentSpeed *= 1.65;
+
+  }
+
+
+  /* SPAWN */
+
+  spawnTimer += delta;
+
+  const spawnRate =
+    Math.max(
+      .35,
+      1.0 - score/3000
+    );
+
+  if(spawnTimer >= spawnRate){
+
+    spawnTimer = 0;
+
+    spawnObject();
+
+  }
+
+
+  /* OBJECT UPDATE */
+
+  for(
+    let i=objects.length-1;
+    i>=0;
+    i--
+  ){
+
+    const o =
+      objects[i];
+
+    if(o.collected)
+      continue;
+
+    o.y +=
+      currentSpeed * delta;
+
+    o.el.style.top =
+      o.y + "px";
+
+    updateMagnet(o);
+
+
+    if(
+      collision(
+        player,
+        o.el
+      )
+    ){
+
+      if(o.type === "coin"){
+
+        collectCoin(o);
+
+      }else if(
+        o.type === "power"
+      ){
+
+        collectPower(o);
+
+      }else{
+
+        hitObstacle(o);
+
+      }
+
+    }
+
+
+    if(
+      o.y >
+      window.innerHeight + 130
+    ){
+
+      o.el.remove();
+
+      objects.splice(
+        i,
+        1
+      );
+
+    }
+
+  }
+
+}
+
+
+/* CLEAR */
+
+function clearObjects(){
+
+  objects.forEach(o=>{
+
+    if(o.el)
+      o.el.remove();
+
+  });
+
+  objects = [];
+
+}
+
+
+/* GAME OVER */
+
+function endGame(){
+
+  running = false;
+
+  clearObjects();
+
+  document.getElementById(
+    "finalScore"
+  ).textContent =
+    Math.floor(score);
+
+  document.getElementById(
+    "finalHigh"
+  ).textContent =
+    highScore;
+
+  gameOver.classList.remove(
+    "hidden"
+  );
+
+  saveAll();
+
+}
+
+
+/* PAUSE */
+
+function togglePause(){
+
+  if(!running)
+    return;
+
+  paused =
+    !paused;
+
+  pauseOverlay.classList.toggle(
+    "hidden",
+    !paused
+  );
+
+  document.getElementById(
+    "pauseBtn"
+  ).textContent =
+    paused ? "▶️" : "⏸️";
+
+}
+
+
+/* TOAST */
+
+function showToast(text){
+
+  toast.textContent =
+    text;
+
+  toast.classList.remove(
+    "toastShow"
+  );
+
+  void toast.offsetWidth;
+
+  toast.classList.add(
+    "toastShow"
+  );
+
+}
+
+
+/* =====================================================
+   KEYBOARD CONTROLS
+   ===================================================== */
+
+document.addEventListener(
+  "keydown",
+  function(e){
+
+    const key =
+      e.key.toLowerCase();
+
+    /*
+      A = LEFT
+      D = RIGHT
+      ArrowLeft = LEFT
+      ArrowRight = RIGHT
+    */
+
+    if(
+      key === "a" ||
+      e.code === "KeyA" ||
+      e.key === "ArrowLeft"
+    ){
+
+      e.preventDefault();
+
+      move(-1);
+
+      return;
+
+    }
+
+
+    if(
+      key === "d" ||
+      e.code === "KeyD" ||
+      e.key === "ArrowRight"
+    ){
+
+      e.preventDefault();
+
+      move(1);
+
+      return;
+
+    }
+
+
+    if(
+      key === "p" ||
+      e.key === "Escape"
+    ){
+
+      e.preventDefault();
+
+      togglePause();
+
+    }
+
+  },
+  {passive:false}
+);
+
+
+/* =====================================================
+   MOBILE CONTROLS
+   ===================================================== */
+
+function buttonControl(
+  element,
+  direction
+){
+
+  element.addEventListener(
+    "pointerdown",
+    function(e){
+
+      e.preventDefault();
+
+      move(direction);
+
+    },
+    {passive:false}
+  );
+
+}
+
+buttonControl(
+  document.getElementById("leftBtn"),
+  -1
+);
+
+buttonControl(
+  document.getElementById("rightBtn"),
+  1
+);
+
+
+/* =====================================================
+   BUTTONS
+   ===================================================== */
+
+document.getElementById(
+  "playBtn"
+).addEventListener(
+  "click",
+  startGame
+);
+
+document.getElementById(
+  "shopBtn"
+).addEventListener(
+  "click",
+  openShop
+);
+
+document.getElementById(
+  "howBtn"
+).addEventListener(
+  "click",
+  openHow
+);
+
+document.getElementById(
+  "creditsBtn"
+).addEventListener(
+  "click",
+  openCredits
+);
+
+document.getElementById(
+  "shopBackBtn"
+).addEventListener(
+  "click",
+  backMenu
+);
+
+document.getElementById(
+  "howBackBtn"
+).addEventListener(
+  "click",
+  backMenu
+);
+
+document.getElementById(
+  "creditsBackBtn"
+).addEventListener(
+  "click",
+  backMenu
+);
+
+document.getElementById(
+  "restartBtn"
+).addEventListener(
+  "click",
+  startGame
+);
+
+document.getElementById(
+  "gameOverMenuBtn"
+).addEventListener(
+  "click",
+  backMenu
+);
+
+document.getElementById(
+  "pauseBtn"
+).addEventListener(
+  "click",
+  togglePause
+);
+
+document.getElementById(
+  "soundBtn"
+).addEventListener(
+  "click",
+  toggleSound
+);
+
+
+/* INIT */
+
+updatePlayer();
+
+updatePlayerPosition();
+
+coinsEl.textContent =
+  coins;
+
+highScoreEl.textContent =
+  highScore;
+
+applyWorld();
+
+</script>
+
+</body>
+</html>
